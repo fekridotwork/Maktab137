@@ -1,0 +1,5 @@
+{
+  "mode": "production",
+  "database_url": "postgresql://user:pass@localhost:5432/appdb",
+  "api_key": "SECRET-123"
+}
