@@ -1,5 +1,9 @@
 def student_sort(students: dict):
-
+    '''
+    At first we will sort by name and then this would help us in the second sort by 
+    grade when 2 grades will be equal
+    
+    '''
     students.sort(key = lambda x : x['name'])
     students.sort(key = lambda x : x['grade'], reverse = True)
 

@@ -10,7 +10,7 @@ def occurrence (input_list : list) -> str:
 
     # Storing counts of each item appearance
     for element in input_list:
-        occur_dict[element] = occur_dict.get(element, 0) + 1
+        occur_dict[element] = occur_dict.get(element) + 1
 
     # finding the max occurrence
     max_occur = max(occur_dict.values())

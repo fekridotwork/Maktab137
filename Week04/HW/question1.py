@@ -10,8 +10,9 @@ from datetime import datetime
 def restrict_hours(start, end):         
     def decorator(func):               
         def wrapper(*args, **kwargs):   
+            print(args, kwargs)
             hour = datetime.now().hour
-            if start <= hour <= end:
+            if start <= hour < end:
                 print(f"Current hour is {hour} in the allowed duration!")
                 return func(*args, **kwargs)
             else:
@@ -20,7 +21,7 @@ def restrict_hours(start, end):
     return decorator
 
 @restrict_hours(start = 9, end = 17)
-def do_work():
+def do_work(y, x):
     print("Working...")
 
-do_work()
+do_work(3 , x = 5)
