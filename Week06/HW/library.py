@@ -81,5 +81,42 @@ class TeacherMember(Member):
             raise ValueError("You reached TeacherMember borrow-limit.")
         super().borrow_book(book)
 
+# #Testing
+# books = [
+#     Book("B1", "A", "I1"),
+#     Book("B2", "A", "I2"),
+#     Book("B3", "A", "I3"),
+#     Book("B4", "A", "I4"),
+#     Book("B5", "A", "I5"),
+#     Book("B6", "A", "I6"),
+# ]
+
+# stu = StudentMember("Ali", "S100", "ali@example.com")
+# stu.borrow_book(books[0])
+# stu.borrow_book(books[1])
+# stu.borrow_book(books[2])
+# print("Student after 3 borrows:", stu.show_info())
+
+# try:
+#     stu.borrow_book(books[3])
+# except Exception as e:
+#     print("Expected (student limit):", e)
+
+# tch = TeacherMember("Maryam", "T200", "maryam@example.com")
+# tch.borrow_book(books[3])
+# tch.borrow_book(books[4])
+# tch.borrow_book(books[5])
+
+# b7 = Book("B7", "A", "I7")
+# b8 = Book("B8", "A", "I8")
+# tch.borrow_book(b7)
+# tch.borrow_book(b8)
+# print("Teacher after 5 borrows:", tch.show_info())
+
+# b9 = Book("B9", "A", "I9")
+# try:
+#     tch.borrow_book(b9)
+# except Exception as e:
+#     print("Expected (teacher limit):", e)
 
 
