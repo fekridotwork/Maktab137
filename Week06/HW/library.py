@@ -48,19 +48,20 @@ class Member:
         borrowed_list = ", ".join(f"{book.isbn} : {book.title}" for book in self.borrowed_books) 
         return f"Member:\nName = '{self.name}'\nid = '{self.member_id}'\nEmail = '{self.email}'\nBorrowed = [{borrowed_list}]"
 
-m = Member("Matin", "1234", "fekridotwork@gmail.com")
-b1 = Book("CLRS", "Unknown", "9780132350")
-b2 = Book("ClRS2", "Unknown", "9781491943")
+#Testing
+# m = Member("Matin", "1234", "fekridotwork@gmail.com")
+# b1 = Book("CLRS", "Unknown", "9780132350")
+# b2 = Book("ClRS2", "Unknown", "9781491943")
 
-m.borrow_book(b1)
-print(f"After borrowing b1:\n{b1.display_info()}")
-print(m.show_info())
+# m.borrow_book(b1)
+# print(f"After borrowing b1:\n{b1.display_info()}")
+# print(m.show_info())
 
-m.borrow_book(b1)
+# m.borrow_book(b1)
 
-m.return_book(b1)
-print(f"After returning b1:\n{b1.display_info()}")
-print(m.show_info())
+# m.return_book(b1)
+# print(f"After returning b1:\n{b1.display_info()}")
+# print(m.show_info())
 
-m.return_book(b2)
+# m.return_book(b2)
 
