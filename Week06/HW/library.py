@@ -119,4 +119,54 @@ class TeacherMember(Member):
 # except Exception as e:
 #     print("Expected (teacher limit):", e)
 
+class Library:
+
+    def __init__(self, name : str):
+        self.name = name
+        self.books = []
+        self.members = []
+    
+    def add_book(self, book : Book):
+        if any (b.isbn == book.isbn for b in self.books):
+            print(f"Book with this ISBN : {book.isbn} already exists.")
+        else:
+            self.books.append(book)
+    
+    def add_member(self, member : Member):
+        if any (m.member_id == member.member_id for m in self.members):
+            print(f"Member with this ID : {member.member_id} already exists.")
+        else:
+            self.members.append(member)
+    
+    def find_book(self, isbn: str) -> Book:
+        for b in self.books:
+            if b.isbn == isbn:
+                return b
+        print("Book not found.")
+
+    def find_member(self, member_id: str) -> Member:
+        for m in self.members:
+            if m.member_id == member_id:
+                return m
+        print("Member not found.")
+
+    def borrow_book(self, member_id: str, isbn: str):
+        member = self.find_member(member_id)
+        book = self.find_book(isbn)
+        member.borrow_book(book)
+
+    def return_book(self, member_id: str, isbn: str):
+        member = self.find_member(member_id)
+        book = self.find_book(isbn)
+        member.return_book(book)
+    
+    def show_all_books(self):
+        print(f"Books in {self.name} :")
+        for b in self.books:
+            print(b.display_info())
+
+    def show_all_members(self):
+        print(f"Members in {self.name} :")
+        for m in self.members:
+            print(m.show_info())
 
