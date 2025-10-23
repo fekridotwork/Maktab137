@@ -73,6 +73,13 @@ class StudentMember(Member):
             raise ValueError("You reached StudentMember borrow-limit.")
         super().borrow_book(book)
 
+class TeacherMember(Member):
+    MAX_BORROW = 5
+
+    def borrow_book(self, book: Book):
+        if len(self.borrowed_books) >= self.MAX_BORROW:
+            raise ValueError("You reached TeacherMember borrow-limit.")
+        super().borrow_book(book)
 
 
 
