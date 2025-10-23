@@ -65,3 +65,14 @@ class Member:
 
 # m.return_book(b2)
 
+class StudentMember(Member):
+    MAX_BORROW = 3
+    
+    def borrow_book(self, book : Book):
+        if len(self.borrowed_books) >= self.MAX_BORROW:
+            raise ValueError("You reached StudentMember borrow-limit.")
+        super().borrow_book(book)
+
+
+
+
