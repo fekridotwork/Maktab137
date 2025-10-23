@@ -74,16 +74,18 @@ class StudentMember(Member):
 
     def borrow_book(self, book: Book, days: int = 30):
         if len(self.borrowed_books) >= self.MAX_BORROW:
-            raise ValueError("You reached StudentMember borrow-limit.")
+            print("You reached StudentMember borrow-limit.")
+            return
         super().borrow_book(book, days = days)
 
 class TeacherMember(Member):
 
     MAX_BORROW = 5
-    
+
     def borrow_book(self, book: Book, days: int = 30):
         if len(self.borrowed_books) >= self.MAX_BORROW:
-            raise ValueError("You reached TeacherMember borrow-limit.")
+            print("You reached TeacherMember borrow-limit.")
+            return
         super().borrow_book(book, days = days)
 
 class Library:
@@ -102,6 +104,7 @@ class Library:
     def load():
         with open('library_data.pkl', "rb") as f:
             return pickle.load(f)
+        print("Library data saved to file.")
 
     @staticmethod
     def load_or_make(name):
@@ -113,25 +116,21 @@ class Library:
         except Exception as e:
             print(f"Failed to load data bc of {e}. \nCreating empty library.")
             return Library(name)
-
-    def saving(self):
-        self.save()
-        print("Library data saved to file.")
-
+        
 
     def add_book(self, book : Book):
         if any (b.isbn == book.isbn for b in self.books):
             print(f"Book with this ISBN : {book.isbn} already exists.")
         else:
             self.books.append(book)
-            self.saving()
+            self.save()
     
     def add_member(self, member : Member):
         if any (m.member_id == member.member_id for m in self.members):
             print(f"Member with this ID : {member.member_id} already exists.")
         else:
             self.members.append(member)
-            self.saving()
+            self.save()
     
     def find_book(self, isbn: str) -> Book:
         for b in self.books:
@@ -152,7 +151,7 @@ class Library:
             print("Borrow failed: member or book not found.")
             return
         member.borrow_book(book, days=days)
-        self.saving()
+        self.save()
 
     def return_book(self, member_id: str, isbn: str):
         member = self.find_member(member_id)
@@ -161,7 +160,7 @@ class Library:
             print("Return failed: member or book not found.")
             return
         member.return_book(book)
-        self.saving()
+        self.save()
     
     def show_all_books(self):
         print(f"Books in {self.name} :")
@@ -184,4 +183,104 @@ class Library:
         borrowed = sum(1 for b in self.books if b.is_borrowed)
         available = total - borrowed
         print(f"Total books: {total} | Borrowed: {borrowed} | Available: {available}")
+
+# Testing part
+if __name__ == "__main__":
+  
+    lib = Library.load_or_make("SimpleLib")
+    print(f"Library name: {lib.name}")
+
+    print("Adding Books :")
+    a = Book("a", "author1", "0001")
+    b = Book("b", "author2", "0002")
+    c = Book("c", "author3", "0003")
+
+    lib.add_book(a)
+    lib.add_book(b)
+    lib.add_book(c)
+
+    print("Trying to add a book with the same isbn")
+    lib.add_book(Book("a-duplicate", "x", "0001"))
+
+    lib.show_all_books()
+    lib.report_counts()
+
+    print("Adding Members :")
+    matin   = StudentMember("Matin",   "S1", "matin@example.com")
+    amirali = TeacherMember("Amirali", "T1", "amirali@example.com")
+    zahra   = StudentMember("Zahra",   "S2", "zahra@example.com")
+
+    lib.add_member(matin)
+    lib.add_member(amirali)
+    lib.add_member(zahra)
+    
+    print("Trying to add a new member with the same id")
+    lib.add_member(StudentMember("Matin-dup", "S1", "dup@example.com"))
+
+    lib.show_all_members()
+
+    print("S1 borrowing a book for 7 days :")
+    lib.borrow_book("S1", "0001", days=7)
+    lib.show_all_books()
+    lib.report_counts()
+
+    print("S2 wants to borrow the same book :")
+    lib.borrow_book("S2", "0001", days=5)
+
+    lib.borrow_book("S1", "0002", days=10)   
+    lib.borrow_book("S1", "0003", days=10)  
+    lib.show_all_members()
+
+    print("Testing borrow-limit for students : ")
+    d = Book("d", "author4", "0004")
+    lib.add_book(d)
+    lib.borrow_book("S1", "0004", days=3)   
+
+    e = Book("e", "author5", "0005")
+    f = Book("f", "author6", "0006")
+    g = Book("g", "author7", "0007")
+    h = Book("h", "author8", "0008")
+
+    lib.add_book(e)
+    lib.add_book(f)
+    lib.add_book(g)
+    lib.add_book(h)
+
+    lib.borrow_book("T1", "0004")  
+    lib.borrow_book("T1", "0005")  
+    lib.borrow_book("T1", "0006")  
+    lib.borrow_book("T1", "0007") 
+    lib.borrow_book("T1", "0008")  
+    
+    print("Testing borrow-limit for teachers")
+    i = Book("i", "author9", "0009")
+    lib.add_book(i)
+    lib.borrow_book("T1", "0009")  
+
+    lib.show_all_members()
+    lib.report_counts()
+
+    print("Testing to return a book which wasn't borrowed :")
+    lib.return_book("S2", "0001")  
+
+    print("After returning a book :")
+    lib.return_book("S1", "0001")
+    lib.show_all_books()
+    lib.report_counts()
+
+    print("Searching :")
+    print("Search 'a' ->", [bk.title for bk in lib.search_book_by_title("a")])
+    print("Search 'Mat' ->", [m.name for m in lib.search_member_by_name("Mat")])
+
+    print("Showing all books and members :")
+    lib.show_all_books()
+    lib.show_all_members()
+
+    print("Testing save and load")
+    lib2 = Library.load()
+    print(f"Loaded library name: {lib2.name}")
+    lib2.show_all_books()
+    lib2.show_all_members()
+    lib2.report_counts()
+
 
