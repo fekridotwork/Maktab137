@@ -64,7 +64,16 @@ class Member:
         book.mark_as_returned()
 
     def show_info(self) -> str:
+
+        #approach2
         borrowed_list = ", ".join(f"{book.isbn} : {book.title}" for book in self.borrowed_books) 
+
+        #approach1
+        # pairs = []
+        # for book in self.borrowed_books:
+        #     pairs.append(f"{book.isbn} : {book.title}")
+        # borrowed_list = ", ".join(pairs)
+
         return f"Member:\nName = '{self.name}'\nid = '{self.member_id}'\nEmail = '{self.email}'\nBorrowed = [{borrowed_list}]"
 
 
@@ -119,11 +128,26 @@ class Library:
         
 
     def add_book(self, book : Book):
+
+        #approach2
         if any (b.isbn == book.isbn for b in self.books):
             print(f"Book with this ISBN : {book.isbn} already exists.")
         else:
             self.books.append(book)
             self.save()
+
+        # approach1
+        # duplicate = False
+        # for b in self.books:
+        #     if b.isbn == book.isbn:
+        #         duplicate = True
+        #         break
+
+        # if duplicate:
+        #     print(f"Book with this ISBN : {book.isbn} already exists.")
+        # else:
+        #     self.books.append(book)
+        #     self.saving()
     
     def add_member(self, member : Member):
         if any (m.member_id == member.member_id for m in self.members):
@@ -174,14 +198,34 @@ class Library:
 
     def search_book_by_title(self, title):
         return [b for b in self.books if title in b.title]
+        # results = []
+        # query = title.lower()
+        # for book in self.books:
+        #     if query in book.title.lower():
+        #         results.append(book)
+        # return results
 
     def search_member_by_name(self, name):
         return [m for m in self.members if name in m.name]
+        # results = []
+        # query = name.lower()
+        # for member in self.members:
+        #     if query in member.name.lower():
+        #         results.append(member)
+        # return results
 
     def report_counts(self):
+
         total = len(self.books)
+
         borrowed = sum(1 for b in self.books if b.is_borrowed)
+        # borrowed = 0
+        # for b in self.books:
+        #     if b.is_borrowed:
+        #         borrowed += 1
+
         available = total - borrowed
+
         print(f"Total books: {total} | Borrowed: {borrowed} | Available: {available}")
 
 # Testing part
