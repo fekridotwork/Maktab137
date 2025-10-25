@@ -27,6 +27,6 @@ class User:
             "last_name": self.last_name,
             "phone": self.phone,
             "birth_date": self.birth_date,
-            "created_at": self.created_at,
-            "role": self.role
+            "created_at": created_at_value,
+            "role": role_value
         }
