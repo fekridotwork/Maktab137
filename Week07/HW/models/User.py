@@ -1,3 +1,6 @@
+import datetime
+
+
 class User:
     def __init__(self, id : int, username : str, password : str, 
                  first_name : str, last_name : str, phone : str, 
@@ -12,16 +15,18 @@ class User:
         self.created_at = created_at
         self.role = role
     def to_dict(self):
-        def to_dict(self):
-            role_value = "Admin" if str(self.role).lower() == "admin" else "Passenger"
-            return {
-                "id": self.id,
-                "username": self.username,
-                "password": self.password,
-                "first_name": self.first_name,
-                "last_name": self.last_name,
-                "phone": self.phone,
-                "birth_date": self.birth_date,
-                "created_at": self.created_at,
-                "role": self.role
-            }
+        
+        role_value = "Admin" if str(self.role).lower() == "admin" else "Passenger"
+        created_at_value = self.created_at or str(datetime.now())
+
+        return {
+            "id": self.id,
+            "username": self.username,
+            "password": self.password,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "phone": self.phone,
+            "birth_date": self.birth_date,
+            "created_at": self.created_at,
+            "role": self.role
+        }
