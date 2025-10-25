@@ -9,5 +9,5 @@ def load_data(file_path):
         return []
 
 def save_data(file_path, data):
-    with open(file_path, mode='r', encoding='utf-8') as file:
+    with open(file_path, mode='w', encoding='utf-8') as file:
         json.dump(data, file, indent=4)
