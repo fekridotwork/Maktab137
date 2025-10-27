@@ -25,7 +25,7 @@ def signup():
     new_user = User(
             id = len(users) + 1,
             username = username,
-            password = password,
+            password = None,
             first_name = first_name,
             last_name = last_name,
             phone = phone,
