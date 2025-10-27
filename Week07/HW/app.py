@@ -118,6 +118,47 @@ def add_travel():
 
     print(f"Travel from {origin} to {destination} added successfully!\n")
 
+def search_travels():
+
+    travels = load_data(TRAVELS_FILE)
+
+    origin = input("Enter origin (or leave empty): ").strip().lower()
+    destination = input("Enter destination (or leave empty): ").strip().lower()
+    date = input("Enter date (YYYY-MM-DD or leave empty): ").strip()
+
+    results = [
+        travel for travel in travels
+        if (not origin or travel["origin"].lower() == origin)
+        and (not destination or travel["destination"].lower() == destination)
+        and (not date or travel["departure_time"].startswith(date))
+    ]
+
+    if not results:
+        print("No travels found.")
+        return
+
+    print("\nSort results by:")
+    print("1.Departure time")
+    print("2.Price")
+    print("3.Available seats")
+    choice = input("Choose (1-3): ").strip()
+
+    if choice == "1":
+        results.sort(key=lambda t: t["departure_time"])
+    elif choice == "2":
+        results.sort(key=lambda t: t["price"])
+    elif choice == "3":
+        results.sort(key=lambda t: t["available_seats"], reverse=True)
+    else:
+        print("Invalid choice. Showing unsorted results.\n")
+
+    print("\nSearch Results:")
+    for travel in results:
+        print(
+            f"ID {travel['id']:>2} | {travel['origin']:<10} → {travel['destination']:<10} | "
+            f"{travel['departure_time']:<19} | {travel['available_seats']:>2} | {travel['price']:>8.2f}"
+        )
+
 
 if __name__ == "__main__":
     print("1. Sign up")
