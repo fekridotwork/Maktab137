@@ -1,9 +1,14 @@
 from utils.file_manager import load_data, save_data
 from models.User import User
+from models.Travel import Travel
+
+USERS_FILE = "Week07/HW/data/users.json"
+TRAVELS_FILE = "Week07/HW/data/travels.json"
+
 
 def signup():
 
-    users = load_data("Week07/HW/data/users.json")
+    users = load_data(USERS_FILE)
 
     while True:
         username = input("Enter username: ")
@@ -38,12 +43,12 @@ def signup():
     new_user.set_password(password)
 
     users.append(new_user.to_dict())
-    save_data("Week07/HW/data/users.json", users)
+    save_data(USERS_FILE, users)
 
     print("User registered successfully!")
 
 def login():
-    users = load_data("Week07/HW/data/users.json")
+    users = load_data(USERS_FILE)
 
     max_attempts = 3
     attempts = 0
@@ -84,6 +89,35 @@ def login():
 
     print("Too many failed attempts. Access denied.\n")
     return None
+
+def add_travel():
+
+    travels = load_data(TRAVELS_FILE)
+
+    origin = input("Please enter the origin : ")
+    destination = input("Please enter the destination : ")
+    departure_time = input("Please enter the departure time : ")
+    duration = int(input("Please enter the duration of the trip : "))
+    capacity = int(input("Please enter the seats capacity : "))
+    price = float(input("Please enter the price : "))
+                  
+    new_travel = Travel(
+        id = len(travels) + 1,
+        origin = origin,
+        destination = destination,
+        departure_time = departure_time,
+        duration = duration,
+        capacity = capacity,
+        available_seats = capacity,
+        price = price,
+        status = "active"
+    )
+
+    travels.append(new_travel.to_dict())
+    save_data(TRAVELS_FILE, travels)
+
+    print(f"Travel from {origin} to {destination} added successfully!\n")
+
 
 if __name__ == "__main__":
     print("1. Sign up")

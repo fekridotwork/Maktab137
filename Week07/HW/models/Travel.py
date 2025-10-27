@@ -19,7 +19,7 @@ class Travel:
         self.available_seats = available_seats
         self.price = price
         self.status = status
-        
+
     def to_dict(self):
         return {
             "id" : self.id,
