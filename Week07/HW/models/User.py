@@ -3,9 +3,16 @@ from datetime import datetime
 
 
 class User:
-    def __init__(self, id : int, username : str, password : str, 
-                 first_name : str, last_name : str, phone : str, 
-                 birth_date : str, created_at : str, role : str = "Passenger"):
+    def __init__(self, 
+                id : int, 
+                username : str, 
+                password : str, 
+                first_name : str,
+                last_name : str, 
+                phone : str, 
+                birth_date : str, 
+                created_at : str, 
+                role : str = "Passenger"):
         self.id = id
         self.username = username
         self.password = password
