@@ -1,3 +1,4 @@
+import hashlib
 from datetime import datetime
 
 
@@ -14,6 +15,16 @@ class User:
         self.birth_date = birth_date
         self.created_at = created_at
         self.role = role
+
+    def hash_password(self, raw_password):
+        return hashlib.sha256(raw_password.encode()).hexdigest()
+
+    def set_password(self, raw_password):
+        self.password = self.hash_password(raw_password)
+
+    def check_password(self, raw_password):
+        return self.password == self.hash_password(raw_password)
+
     def to_dict(self):
         
         role_value = "Admin" if str(self.role).lower() == "admin" else "Passenger"
