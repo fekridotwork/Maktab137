@@ -1,9 +1,12 @@
 from utils.file_manager import load_data, save_data
+from datetime import datetime
 from models.User import User
 from models.Travel import Travel
+from models.Ticket import Ticket
 
 USERS_FILE = "Week07/HW/data/users.json"
 TRAVELS_FILE = "Week07/HW/data/travels.json"
+TICKETS_FILE = "Week07/HW/data/tickets.json"
 
 
 def signup():
@@ -158,6 +161,57 @@ def search_travels():
             f"ID {travel['id']:>2} | {travel['origin']:<10} → {travel['destination']:<10} | "
             f"{travel['departure_time']:<19} | {travel['available_seats']:>2} | {travel['price']:>8.2f}"
         )
+
+def reserve_ticket():
+
+    travels = load_data(TRAVELS_FILE)
+
+    try:
+        travel_id = int(input("Please enter the travel ID : "))
+    except ValueError:
+        print("Travel_ID you entered is not valid!")
+        # Getting another id?
+        return
+
+    travel = next((t for t in travels if t["id"] == travel_id), None)
+
+    # When we didn't find any travel with that ID
+    if not travel:
+        print("Travel not found.")
+        # getting another travel id?
+        return
+    
+    # Checking that this travel has available seats or not
+    if travel["available_seats"] <= 0:
+        print("No seats available for this travel.")
+        # getting another travel id?
+        return
+    
+    # Specifying a seat number for the user \ could be improved
+    seat_number = travel["capacity"] - travel["available_seats"] + 1
+
+    tickets = load_data(TICKETS_FILE)
+    new_ticket = Ticket(
+        id = len(tickets) + 1,
+        user_id = 1, # Not specified
+        travel_id = travel["id"],
+        seat_number = seat_number,
+        status = "reserved",
+        created_at = str(datetime.now())
+    )
+
+    travel["available_seats"] -= 1
+
+    tickets.append(new_ticket.to_dict())
+    save_data(TICKETS_FILE, tickets)
+    save_data(TRAVELS_FILE, travels)
+
+    print(f"\nTicket reserved successfully!")
+    print(f"Travel: {travel['origin']} -> {travel['destination']} on {travel['departure_time']}")
+    print(f"Seat number: {seat_number}")
+
+
+
 
 
 if __name__ == "__main__":
