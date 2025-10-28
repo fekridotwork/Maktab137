@@ -3,10 +3,12 @@ from datetime import datetime
 from models.User import User
 from models.Travel import Travel
 from models.Ticket import Ticket
+from models.Payment import Payment
 
 USERS_FILE = "Week07/HW/data/users.json"
 TRAVELS_FILE = "Week07/HW/data/travels.json"
 TICKETS_FILE = "Week07/HW/data/tickets.json"
+PAYMENTS_FILE = "Week07/HW/data/payments.json"
 
 
 def signup():
@@ -210,6 +212,61 @@ def reserve_ticket():
     print(f"Travel: {travel['origin']} -> {travel['destination']} on {travel['departure_time']}")
     print(f"Seat number: {seat_number}")
 
+def make_payment(user):
+
+    tickets = load_data(TICKETS_FILE)
+    travels = load_data(TRAVELS_FILE)
+    payments = load_data(PAYMENTS_FILE)
+
+    ticket_id = int(input("Enter your ticket ID to pay: ").strip())
+
+    ticket = next((ticket for ticket in tickets if ticket["id"] == ticket_id), None)
+
+    if not ticket:
+        print("Ticket not found.")
+        return
+    
+    if ticket["user_id"] != user["id"]:
+        print("This ticket does not belong to you.")
+        return
+
+    if ticket["status"] != "reserved":
+        print("This ticket is already paid or cancelled.")
+        return
+
+    travel = next((travel for travel in travels if travel["id"] == ticket["travel_id"]), None)
+
+    if not travel:
+        print("Travel not found for this ticket.")
+        return
+    
+    amount = travel["price"]
+
+    new_payment = Payment(
+        id = len(payments) + 1,
+        user_id = user["id"],
+        ticket_id = ticket["id"],
+        amount = amount,
+        status = "success",
+        paid_at = str(datetime.now())
+    )
+
+    ticket["status"] = "paid"
+
+    payments.append(new_payment.to_dict())
+    save_data(PAYMENTS_FILE, payments)
+    save_data(TICKETS_FILE, tickets)
+
+    print("\nPayment successful!")
+    print(f"Ticket ID: {ticket['id']}")
+    print(f"Amount Paid: {amount:.2f}")
+    print(f"Time: {new_payment.paid_at}")
+
+
+
+
+
+    
 
 
 
