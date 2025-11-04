@@ -96,6 +96,7 @@ def login():
     return None
 
 def add_travel():
+    # Only Admin can do this
 
     travels = load_data(TRAVELS_FILE)
 
@@ -262,14 +263,127 @@ def make_payment(user):
     print(f"Amount Paid: {amount:.2f}")
     print(f"Time: {new_payment.paid_at}")
 
-
-
-
-
+def edit_travel():
+    # For admin only
     
+    travels = load_data(TRAVELS_FILE)
+    if not travels:
+        print("No travels to edit.")
+        return
+    
+    try:
+        travel_id = int(input("Please enter the travel id: ").strip())
+    except ValueError:
+        print("Invalid travel ID.")
+        return
+    
+    target_travel = None
+    for travel in travels:
+        if travel_id == travel["id"]:
+            target_travel = travel
+            break
 
+    if not target_travel:
+        print("Your target travel didn't found.")
+        # Getting id again?
+        return
+    
+    while True:
+        print("\n--- Current travel ---")
+        print(f"ID: {target_travel['id']}")
+        print(f"1) origin         : {target_travel['origin']}")
+        print(f"2) destination    : {target_travel['destination']}")
+        print(f"3) departure_time : {target_travel['departure_time']}")
+        print(f"4) duration       : {target_travel['duration']} (minutes)")
+        print(f"5) capacity       : {target_travel['capacity']}")
+        print(f"6) available_seats: {target_travel['available_seats']}")
+        print(f"7) price          : {target_travel['price']}")
+        print(f"8) status         : {target_travel['status']}")
+        print("9) SAVE changes")
+        print("0) CANCEL (discard changes)")
 
+        option = input("\nChoose field to edit (0..9): ")
 
+        if option == "0":
+            print("Changes discarded.")
+            return
+        
+        elif option == "1":
+            origin = input("Please enter the new origin : ").strip()
+            if origin:
+                target_travel["origin"] = origin
+            else:
+                print("No Change.")
+
+        elif option == "2":
+            destination = input("Please enter the new destination : ").strip()
+            if destination:
+                target_travel["destination"] = destination
+            else:
+                print("No Change.")
+
+        elif option == "3":
+            departure_time = input("Please enter the new departure_time : ").strip()
+            if departure_time:
+                target_travel["departure_time"] = departure_time
+            else:
+                print("No Change.")
+
+        elif option == "4":
+            duration = input("Please enter the new duration : ").strip()
+            if not duration:
+                print("No Change.")
+            else:
+                duration = int(duration)
+                if duration < 0:
+                    print("Duration can't be negative!")
+                else:
+                    target_travel["duration"] = duration
+                    print("Duration updated.")
+                
+        elif option == "5":
+            booked = target_travel["capacity"] - target_travel["available_seats"]
+            capacity = input("Please enter the new capacity : ").strip()
+            if not capacity:
+                print("No change.")
+            else:
+                capacity = int(capacity)
+                if capacity < booked:
+                    print(f"Cannot set capacity below already booked seats ({booked}).")
+                else:
+                    target_travel["capacity"] = capacity
+                    target_travel["available_seats"] = capacity - booked
+                    print("Capacity updated successfully.")
+
+        elif option == "6":
+            print("You can't change this.")
+
+        elif option == "7":
+            price = input("Please enter the new price : ").strip()
+            if not price:
+                print("No Change.")
+            else:
+                price = float(price)
+                if price < 0:
+                    print("Price can't be negative.")
+                else:
+                    target_travel["price"] = price
+                    print("Price updated.")
+
+        elif option == "8":
+            status = input("Please enter the new status (active / cancelled / completed) : ").strip().lower()
+            if status in ("active", "cancelled", "completed"):
+                target_travel["status"] = status
+            else:
+                print("Invalid status. No change.")
+
+        elif option == "9":
+            save_data(TRAVELS_FILE, travels)
+            print("Changes saved.")
+            return
+
+        else:
+            print("Invalid Choice!")
 
 if __name__ == "__main__":
     print("1. Sign up")
