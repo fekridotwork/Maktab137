@@ -211,6 +211,10 @@ def search_travels():
 
 def reserve_ticket():
     try:
+        user = login()
+        if not user:
+            raise PermissionDeniedError("Login required.")
+        
         travels = load_data(TRAVELS_FILE)
         if not travels:
             raise NotFoundError("No travels available.")
@@ -230,6 +234,7 @@ def reserve_ticket():
         for t in travels:
             if t["id"] == travel_id:
                 travel = t
+                break
                 
         # When we didn't find any travel with that ID
         if not travel:
@@ -267,7 +272,7 @@ def reserve_ticket():
 
         new_ticket = Ticket(
             id = len(tickets) + 1,
-            user_id = 1, # Not specified
+            user_id = user["id"],
             travel_id = travel["id"],
             seat_number = seat_number,
             status = "reserved",
@@ -353,18 +358,17 @@ def make_payment(user):
 
         if payment_status == "success":
             ticket["status"] = "paid"
+            save_data(PAYMENTS_FILE, payments)
+            save_data(TICKETS_FILE, tickets)
             print("\nPayment successful!")
+            print(f"Ticket ID: {ticket['id']}")
+            print(f"Amount Paid: {amount:.2f}")
+            print(f"Time: {new_payment.paid_at}")
+            print(f"Status: {payment_status}")
         else:
+            save_data(PAYMENTS_FILE, payments)
             raise PaymentFailedError("Payment failed. Ticket remains reserved.")
 
-        save_data(PAYMENTS_FILE, payments)
-        save_data(TICKETS_FILE, tickets)
-
-        print("\nPayment successful!")
-        print(f"Ticket ID: {ticket['id']}")
-        print(f"Amount Paid: {amount:.2f}")
-        print(f"Time: {new_payment.paid_at}")
-        print(f"Status: {payment_status}")
     except Exception as e:
         handle_error(e)
 
@@ -428,11 +432,16 @@ def edit_travel():
                 print("No Change.")
 
         elif option == "3":
-            departure_time = input("Please enter the new departure_time : ").strip()
+            departure_time = input("Please enter the new departure_time (YYYY-MM-DD HH:MM:SS): ").strip()
             if departure_time:
-                target_travel["departure_time"] = departure_time
+                if is_valid_datetime(departure_time):
+                    target_travel["departure_time"] = departure_time
+                    print("Departure time updated.")
+                else:
+                    print("Invalid datetime format. No change.")
             else:
                 print("No Change.")
+
 
         elif option == "4":
             duration = input("Please enter the new duration : ").strip()
@@ -498,8 +507,16 @@ def cancel_travel():
     travels = load_data(TRAVELS_FILE)
     tickets = load_data(TICKETS_FILE)
 
-    travel_id = input("Please enter the travel_id you want to cancel : ")
-    
+    if not travels:
+        print("No travels available.")
+        return
+
+    try:
+        travel_id = int(input("Please enter the travel_id you want to cancel : ").strip())
+    except ValueError:
+        print("Invalid travel ID.")
+        return
+        
     target_travel = None
     for travel in travels:
         if travel_id == travel["id"]:
@@ -511,21 +528,21 @@ def cancel_travel():
         # Getting again?
         return
     
-    if travel["status"] == "cancelled":
+    if target_travel["status"] == "cancelled":
         print("This travel is already cancelled.")
         return
     
-    if travel["status"] == "completed":
+    if target_travel["status"] == "completed":
         print("Cannot cancel a completed travel.")
         return
 
-    confirm = input(f"Are you sure to cancel travel {travel['id']} ({travel['origin']} -> {travel['destination']} at {travel['departure_time']})? (y/n): ").strip().lower()
+    confirm = input(f"Are you sure to cancel travel {target_travel['id']} ({target_travel['origin']} -> {target_travel['destination']} at {target_travel['departure_time']})? (y/n): ").strip().lower()
     if confirm != "y":
         print("Operation got cancelled.")
         return
 
-    travel["status"] = "cancelled"
-    travel["available_seats"] = travel["capacity"]
+    target_travel["status"] = "cancelled"
+    target_travel["available_seats"] = travel["capacity"]
 
     affected_tickets = 0
     for ticket in tickets:
