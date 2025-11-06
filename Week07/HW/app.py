@@ -385,6 +385,52 @@ def edit_travel():
         else:
             print("Invalid Choice!")
 
+def cancel_travel():
+
+    travels = load_data(TRAVELS_FILE)
+    tickets = load_data(TICKETS_FILE)
+
+    travel_id = input("Please enter the travel_id you want to cancel : ")
+    
+    target_travel = None
+    for travel in travels:
+        if travel_id == travel["id"]:
+            target_travel = travel
+            break
+
+    if not target_travel:
+        print("Your target travel couldn't be found.")
+        # Getting again?
+        return
+    
+    if travel["status"] == "cancelled":
+        print("This travel is already cancelled.")
+        return
+    
+    if travel["status"] == "completed":
+        print("Cannot cancel a completed travel.")
+        return
+
+    confirm = input(f"Are you sure to cancel travel {travel['id']} ({travel['origin']} -> {travel['destination']} at {travel['departure_time']})? (y/n): ").strip().lower()
+    if confirm != "y":
+        print("Operation got cancelled.")
+        return
+
+    travel["status"] = "cancelled"
+    travel["available_seats"] = travel["capacity"]
+
+    affected_tickets = 0
+    for ticket in tickets:
+        if ticket["travel_id"] == travel_id and ticket["status"] in ("reserved", "paid"):
+            ticket["status"] = "cancelled"
+            affected_tickets += 1
+
+    save_data(TRAVELS_FILE, travels)
+    save_data(TICKETS_FILE, tickets)
+
+    print(f"Travel {travel_id} cancelled.")
+    print(f"Cancelled tickets: {affected_tickets}")
+
 if __name__ == "__main__":
     print("1. Sign up")
     print("2. Login")
