@@ -4,11 +4,22 @@ from models.User import User
 from models.Travel import Travel
 from models.Ticket import Ticket
 from models.Payment import Payment
+from utils.exceptions import (
+    AppError, InvalidDateError, InvalidIdError, NotFoundError,
+    PermissionDeniedError, SeatNotAvailableError, CapacityConflictError,
+    PaymentFailedError
+)
 
 USERS_FILE = "Week07/HW/data/users.json"
 TRAVELS_FILE = "Week07/HW/data/travels.json"
 TICKETS_FILE = "Week07/HW/data/tickets.json"
 PAYMENTS_FILE = "Week07/HW/data/payments.json"
+
+def handle_error(e: Exception):
+    if isinstance(e, AppError):
+        print(e)
+    else:
+        print("Unexpected error occurred.")
 
 def is_valid_datetime(s: str):
     try:
@@ -23,6 +34,8 @@ def is_valid_date(s: str):
         return True
     except ValueError:
         return False
+    
+
 
 
 
@@ -112,241 +125,248 @@ def login():
 
 def add_travel():
     # Only Admin can do this
+    try:
+        travels = load_data(TRAVELS_FILE)
 
-    travels = load_data(TRAVELS_FILE)
+        origin = input("Please enter the origin : ")
+        destination = input("Please enter the destination : ")
+        while True:
+            departure_time = input("Please enter the departure time (YYYY-MM-DD HH:MM:SS): ").strip()
+            if is_valid_datetime(departure_time):
+                break
+            raise InvalidDateError("Invalid datetime format. Use YYYY-MM-DD HH:MM:SS.")
+        try:
+            duration = int(input("Please enter the duration of the trip (minutes): ").strip())
+            capacity = int(input("Please enter the seats capacity : ").strip())
+            price = float(input("Please enter the price : ").strip())
+        except ValueError:
+            raise AppError("Numeric fields must be valid numbers.")
 
-    origin = input("Please enter the origin : ")
-    destination = input("Please enter the destination : ")
-    while True:
-        departure_time = input("Please enter the departure time (YYYY-MM-DD HH:MM:SS): ").strip()
-        if is_valid_datetime(departure_time):
-            break
-        print("Invalid datetime format.")
-    duration = int(input("Please enter the duration of the trip : "))
-    capacity = int(input("Please enter the seats capacity : "))
-    price = float(input("Please enter the price : "))
-                  
-    new_travel = Travel(
-        id = len(travels) + 1,
-        origin = origin,
-        destination = destination,
-        departure_time = departure_time,
-        duration = duration,
-        capacity = capacity,
-        available_seats = capacity,
-        price = price,
-        status = "active"
-    )
-
-    travels.append(new_travel.to_dict())
-    save_data(TRAVELS_FILE, travels)
-
-    print(f"Travel from {origin} to {destination} added successfully!\n")
-
-def search_travels():
-
-    travels = load_data(TRAVELS_FILE)
-
-    origin = input("Enter origin (or leave empty): ").strip().lower()
-    destination = input("Enter destination (or leave empty): ").strip().lower()
-    date = input("Enter date (YYYY-MM-DD or leave empty): ").strip()
-    if date and not is_valid_date(date):
-        print("Invalid date format. Example: 2025-11-01")
-        return
-
-    results = [
-        travel for travel in travels
-        if (not origin or travel["origin"].lower() == origin)
-        and (not destination or travel["destination"].lower() == destination)
-        and (not date or travel["departure_time"].startswith(date))
-    ]
-
-    if not results:
-        print("No travels found.")
-        return
-
-    print("\nSort results by:")
-    print("1.Departure time")
-    print("2.Price")
-    print("3.Available seats")
-    choice = input("Choose (1-3): ").strip()
-
-    if choice == "1":
-        results.sort(key=lambda t: t["departure_time"])
-    elif choice == "2":
-        results.sort(key=lambda t: t["price"])
-    elif choice == "3":
-        results.sort(key=lambda t: t["available_seats"], reverse=True)
-    else:
-        print("Invalid choice. Showing unsorted results.\n")
-
-    print("\nSearch Results:")
-    for travel in results:
-        print(
-            f"ID {travel['id']:>2} | {travel['origin']:<10} → {travel['destination']:<10} | "
-            f"{travel['departure_time']:<19} | {travel['available_seats']:>2} | {travel['price']:>8.2f}"
+        new_travel = Travel(
+            id = len(travels) + 1,
+            origin = origin,
+            destination = destination,
+            departure_time = departure_time,
+            duration = duration,
+            capacity = capacity,
+            available_seats = capacity,
+            price = price,
+            status = "active"
         )
 
+        travels.append(new_travel.to_dict())
+        save_data(TRAVELS_FILE, travels)
+
+        print(f"Travel from {origin} to {destination} added successfully!\n")
+    except Exception as e:
+        handle_error(e)    
+
+def search_travels():
+    try:
+        travels = load_data(TRAVELS_FILE)
+
+        origin = input("Enter origin (or leave empty): ").strip().lower()
+        destination = input("Enter destination (or leave empty): ").strip().lower()
+        date = input("Enter date (YYYY-MM-DD or leave empty): ").strip()
+        if date and not is_valid_date(date):
+            raise InvalidDateError("Invalid date format. Use YYYY-MM-DD.")
+
+        results = []
+        for travel in travels:
+            if origin and travel["origin"].lower() != origin:
+                continue
+            if destination and travel["destination"].lower() != destination:
+                continue
+            if date and not travel["departure_time"].startswith(date):
+                continue
+            results.append(travel)
+
+        if not results:
+            print("No travels found.")
+            return
+
+        print("\nSort results by:")
+        print("1.Departure time")
+        print("2.Price")
+        print("3.Available seats")
+        choice = input("Choose (1-3): ").strip()
+
+        if choice == "1":
+            results.sort(key=lambda t: t["departure_time"])
+        elif choice == "2":
+            results.sort(key=lambda t: t["price"])
+        elif choice == "3":
+            results.sort(key=lambda t: t["available_seats"], reverse=True)
+        else:
+            print("Invalid choice. Showing unsorted results.\n")
+
+        print("\nSearch Results:")
+        for travel in results:
+            print(
+                f"ID {travel['id']:>2} | {travel['origin']:<10} → {travel['destination']:<10} | "
+                f"{travel['departure_time']:<19} | {travel['available_seats']:>2} | {travel['price']:>8.2f}"
+            )
+    except Exception as e:
+        handle_error(e)   
+
 def reserve_ticket():
-
-    travels = load_data(TRAVELS_FILE)
-    if not travels:
-        print("No travels available.")
-        return
-
-    print("\nAvailable travels:")
-    for t in travels:
-        print(f"ID {t['id']} | {t['origin']} -> {t['destination']} | {t['departure_time']} | seats: {t['available_seats']}/{t['capacity']} | price: {t['price']}")
-
     try:
-        travel_id = int(input("Please enter the travel ID : ").strip())
-    except ValueError:
-        print("Travel_ID you entered is not valid!")
-        # Getting another id?
-        return
+        travels = load_data(TRAVELS_FILE)
+        if not travels:
+            raise NotFoundError("No travels available.")
 
-    travel = None
-    for t in travels:
-        if t["id"] == travel_id:
-            travel = t
-            
-    # When we didn't find any travel with that ID
-    if not travel:
-        print("Travel not found.")
-        # getting another travel id?
-        return
-    
-    if travel["status"] != "active":
-        print(f"This travel is not active (status: {travel['status']}).")
+        print("\nAvailable travels:")
+        for t in travels:
+            print(f"ID {t['id']} | {t['origin']} -> {t['destination']} | {t['departure_time']} | seats: {t['available_seats']}/{t['capacity']} | price: {t['price']}")
 
-    # Checking that this travel has available seats or not
-    if travel["available_seats"] <= 0:
-        print("No seats available for this travel.")
-        # getting another travel id?
-        return
-    
-    tickets = load_data(TICKETS_FILE)
-    booked_seats = []
-    for t in tickets:
-        if t["travel_id"] == travel["id"] and t["status"] in ("reserved", "paid"):
-            booked_seats.append(t["seat_number"])
+        try:
+            travel_id = int(input("Please enter the travel ID : ").strip())
+        except ValueError:
+            raise InvalidIdError("Invalid travel ID.")
+            # Getting another id?
+        
 
-    all_seats = list(range(1, travel["capacity"] + 1))
-    available_seats = [s for s in all_seats if s not in booked_seats]
+        travel = None
+        for t in travels:
+            if t["id"] == travel_id:
+                travel = t
+                
+        # When we didn't find any travel with that ID
+        if not travel:
+            raise NotFoundError("Travel not found.")
+            # getting another travel id?
 
-    print(f"\nTaken seats: {booked_seats if booked_seats else 'None'}")
-    print(f"Free seats : {available_seats if available_seats else 'None'}")
+        
+        if travel["status"] != "active":
+            raise AppError(f"This travel is not active (status: {travel['status']}).")
 
-    try:
-        seat_number = int(input("Enter the seat number you want to reserve: ").strip())
-    except ValueError:
-        print("Invalid seat number.")
-        return
+        # Checking that this travel has available seats or not
+        if travel["available_seats"] <= 0:
+            raise SeatNotAvailableError("No seats available for this travel.")
+            # getting another travel id?
+        
+        tickets = load_data(TICKETS_FILE)
+        booked_seats = []
+        for t in tickets:
+            if t["travel_id"] == travel["id"] and t["status"] in ("reserved", "paid"):
+                booked_seats.append(t["seat_number"])
 
-    if seat_number not in available_seats:
-        print("This seat is not available!")
-        return
+        all_seats = list(range(1, travel["capacity"] + 1))
+        available_seats = [s for s in all_seats if s not in booked_seats]
 
-    new_ticket = Ticket(
-        id = len(tickets) + 1,
-        user_id = 1, # Not specified
-        travel_id = travel["id"],
-        seat_number = seat_number,
-        status = "reserved",
-        created_at = str(datetime.now())
-    )
+        print(f"\nTaken seats: {booked_seats if booked_seats else 'None'}")
+        print(f"Free seats : {available_seats if available_seats else 'None'}")
 
-    travel["available_seats"] -= 1
+        try:
+            seat_number = int(input("Enter the seat number you want to reserve: ").strip())
+        except ValueError:
+            raise AppError("Invalid seat number.")
 
-    for i, t in enumerate(travels):
-        if t["id"] == travel["id"]:
-            travels[i] = travel
-            break
+        if seat_number not in available_seats:
+            raise SeatNotAvailableError("This seat is not available.")
 
-    tickets.append(new_ticket.to_dict())
-    save_data(TICKETS_FILE, tickets)
-    save_data(TRAVELS_FILE, travels)
+        new_ticket = Ticket(
+            id = len(tickets) + 1,
+            user_id = 1, # Not specified
+            travel_id = travel["id"],
+            seat_number = seat_number,
+            status = "reserved",
+            created_at = str(datetime.now())
+        )
 
-    print(f"\nTicket reserved successfully!")
-    print(f"Travel: {travel['origin']} -> {travel['destination']} on {travel['departure_time']}")
-    print(f"Seat number: {seat_number}")
+        travel["available_seats"] -= 1
+
+        for i, t in enumerate(travels):
+            if t["id"] == travel["id"]:
+                travels[i] = travel
+                break
+
+        tickets.append(new_ticket.to_dict())
+        save_data(TICKETS_FILE, tickets)
+        save_data(TRAVELS_FILE, travels)
+
+        print(
+            f"\nTicket reserved successfully!\n"
+            f"   Travel   : {travel['origin']} -> {travel['destination']} | {travel['departure_time']}\n"
+            f"   Seat No. : {seat_number}\n"
+            f"   Status   : reserved\n"
+            )
+    except Exception as e:
+        handle_error(e)   
 
 def make_payment(user):
-
-    tickets = load_data(TICKETS_FILE)
-    travels = load_data(TRAVELS_FILE)
-    payments = load_data(PAYMENTS_FILE)
-
     try:
-        ticket_id = int(input("Enter your ticket ID to pay: ").strip())
-    except ValueError:
-        print("Invalid ticket ID.")
-        return
-    
-    ticket = None
-    for t in tickets:
-        if t["id"] == ticket_id:
-            ticket = t
-            break
+        tickets = load_data(TICKETS_FILE)
+        travels = load_data(TRAVELS_FILE)
+        payments = load_data(PAYMENTS_FILE)
 
-    if not ticket:
-        print("Ticket not found.")
-        return
-    
-    if ticket["user_id"] != user["id"]:
-        print("This ticket does not belong to you.")
-        return
+        try:
+            ticket_id = int(input("Enter your ticket ID to pay: ").strip())
+        except ValueError:
+            raise InvalidIdError("Invalid ticket ID.")
+        
+        ticket = None
+        for t in tickets:
+            if t["id"] == ticket_id:
+                ticket = t
+                break
 
-    if ticket["status"] != "reserved":
-        print("This ticket is already paid or cancelled.")
-        return
+        if not ticket:
+            raise NotFoundError("Ticket not found.")
+        
+        if ticket["user_id"] != user["id"]:
+            raise PermissionDeniedError("This ticket does not belong to you.")
 
-    travel = None
-    for tr in travels:
-        if tr["id"] == ticket["travel_id"]:
-            travel = tr
-            break
+        if ticket["status"] != "reserved":
+            raise AppError("This ticket is already paid or cancelled.")
 
-    if not travel:
-        print("Travel not found for this ticket.")
-        return
-    
-    amount = travel["price"]
+        travel = None
+        for tr in travels:
+            if tr["id"] == ticket["travel_id"]:
+                travel = tr
+                break
 
-    confirm = input(f"Pay {amount} for ticket {ticket_id}? (y/n): ").strip().lower()
-    if confirm != "y":
-        print("Payment cancelled by user.")
-        return
+        if not travel:
+            raise NotFoundError("Travel not found for this ticket.")
+        
+        amount = travel["price"]
 
-    success_input = input("Was the payment successful? (y/n): ").strip().lower()
-    payment_status = "success" if success_input == "y" else "failed"
+        confirm = input(f"Pay {amount} for ticket {ticket_id}? (y/n): ").strip().lower()
+        if confirm != "y":
+            print("Payment cancelled by user.")
+            return
+
+        success_input = input("Was the payment successful? (y/n): ").strip().lower()
+        payment_status = "success" if success_input == "y" else "failed"
 
 
-    new_payment = Payment(
-        id = len(payments) + 1,
-        user_id = user["id"],
-        ticket_id = ticket["id"],
-        amount = amount,
-        status = payment_status,
-        paid_at = str(datetime.now())
-    )
+        new_payment = Payment(
+            id = len(payments) + 1,
+            user_id = user["id"],
+            ticket_id = ticket["id"],
+            amount = amount,
+            status = payment_status,
+            paid_at = str(datetime.now())
+        )
 
-    payments.append(new_payment.to_dict())
+        payments.append(new_payment.to_dict())
 
-    if payment_status == "success":
-        ticket["status"] = "paid"
+        if payment_status == "success":
+            ticket["status"] = "paid"
+            print("\nPayment successful!")
+        else:
+            raise PaymentFailedError("Payment failed. Ticket remains reserved.")
+
+        save_data(PAYMENTS_FILE, payments)
+        save_data(TICKETS_FILE, tickets)
+
         print("\nPayment successful!")
-    else:
-        print("\nPayment failed. Ticket remains reserved.")
-
-    save_data(PAYMENTS_FILE, payments)
-    save_data(TICKETS_FILE, tickets)
-
-    print("\nPayment successful!")
-    print(f"Ticket ID: {ticket['id']}")
-    print(f"Amount Paid: {amount:.2f}")
-    print(f"Time: {new_payment.paid_at}")
-    print(f"Status: {payment_status}")
+        print(f"Ticket ID: {ticket['id']}")
+        print(f"Amount Paid: {amount:.2f}")
+        print(f"Time: {new_payment.paid_at}")
+        print(f"Status: {payment_status}")
+    except Exception as e:
+        handle_error(e)
 
 def edit_travel():
     # For admin only
@@ -427,19 +447,22 @@ def edit_travel():
                     print("Duration updated.")
                 
         elif option == "5":
-            booked = target_travel["capacity"] - target_travel["available_seats"]
-            capacity = input("Please enter the new capacity : ").strip()
-            if not capacity:
-                print("No change.")
-            else:
-                capacity = int(capacity)
-                if capacity < booked:
-                    print(f"Cannot set capacity below already booked seats ({booked}).")
+            try:
+                booked = target_travel["capacity"] - target_travel["available_seats"]
+                capacity = input("Please enter the new capacity : ").strip()
+                if not capacity:
+                    print("No change.")
                 else:
+                    capacity = int(capacity)
+                    if capacity < booked:
+                        raise CapacityConflictError(f"Cannot set capacity below already booked seats ({booked}).")
                     target_travel["capacity"] = capacity
                     target_travel["available_seats"] = capacity - booked
                     print("Capacity updated successfully.")
-
+            except ValueError:
+                handle_error(AppError("Invalid capacity. No change."))
+            except Exception as e:
+                handle_error(e)     
         elif option == "6":
             print("You can't change this.")
 
