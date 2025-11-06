@@ -44,21 +44,30 @@ def signup():
     users = load_data(USERS_FILE)
 
     while True:
-        username = input("Enter username: ")
+        username = input("Enter username: ").strip()
         duplicate = False
-        for user in users:
-            if user["username"] == username:
+        for u in users:
+            if u["username"] == username:
                 print("Oops! This username already exists. Please choose another one.")
                 duplicate = True
                 break
         if not duplicate:
             break
-    password = input("Enter your password: ")
-    first_name = input("Enter first name: ")
-    last_name = input("Enter last name: ")
-    phone = input("Enter phone number: ")
-    birth_date = input("Enter birth date (YYYY-MM-DD): ")
-    role = input("Enter role (admin / passenger): ")
+
+    password = input("Enter your password: ").strip()
+    first_name = input("Enter first name: ").strip()
+    last_name = input("Enter last name: ").strip()
+    phone = input("Enter phone number: ").strip()
+
+    while True:
+        birth_date = input("Enter birth date (YYYY-MM-DD): ").strip()
+        if is_valid_date(birth_date):
+            break
+        print("Invalid date format. Example: 2003-02-19")
+
+    role = input("Enter role (admin / passenger): ").strip().lower()
+    if role not in ("admin", "passenger"):
+        role = "passenger"
 
     new_user = User(
             id = len(users) + 1,
@@ -337,6 +346,11 @@ def make_payment(user):
 
         if not travel:
             raise NotFoundError("Travel not found for this ticket.")
+        
+        if travel["status"] != "active":
+            print(f"Cannot pay for a travel with status '{travel['status']}'.")
+            return
+
         
         amount = travel["price"]
 
