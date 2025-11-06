@@ -168,32 +168,63 @@ def search_travels():
 def reserve_ticket():
 
     travels = load_data(TRAVELS_FILE)
+    if not travels:
+        print("No travels available.")
+        return
+
+    print("\nAvailable travels:")
+    for t in travels:
+        print(f"ID {t['id']} | {t['origin']} -> {t['destination']} | {t['departure_time']} | seats: {t['available_seats']}/{t['capacity']} | price: {t['price']}")
 
     try:
-        travel_id = int(input("Please enter the travel ID : "))
+        travel_id = int(input("Please enter the travel ID : ").strip())
     except ValueError:
         print("Travel_ID you entered is not valid!")
         # Getting another id?
         return
 
-    travel = next((t for t in travels if t["id"] == travel_id), None)
-
+    travel = None
+    for t in travels:
+        if t["id"] == travel_id:
+            travel = t
+            
     # When we didn't find any travel with that ID
     if not travel:
         print("Travel not found.")
         # getting another travel id?
         return
     
+    if travel["status"] != "active":
+        print(f"This travel is not active (status: {travel['status']}).")
+
     # Checking that this travel has available seats or not
     if travel["available_seats"] <= 0:
         print("No seats available for this travel.")
         # getting another travel id?
         return
     
-    # Specifying a seat number for the user \ could be improved
-    seat_number = travel["capacity"] - travel["available_seats"] + 1
-
     tickets = load_data(TICKETS_FILE)
+    booked_seats = []
+    for t in tickets:
+        if t["travel_id"] == travel["id"] and t["status"] in ("reserved", "paid"):
+            booked_seats.append(t["seat_number"])
+
+    all_seats = list(range(1, travel["capacity"] + 1))
+    available_seats = [s for s in all_seats if s not in booked_seats]
+
+    print(f"\nTaken seats: {booked_seats if booked_seats else 'None'}")
+    print(f"Free seats : {available_seats if available_seats else 'None'}")
+
+    try:
+        seat_number = int(input("Enter the seat number you want to reserve: ").strip())
+    except ValueError:
+        print("Invalid seat number.")
+        return
+
+    if seat_number not in available_seats:
+        print("This seat is not available!")
+        return
+
     new_ticket = Ticket(
         id = len(tickets) + 1,
         user_id = 1, # Not specified
@@ -204,6 +235,11 @@ def reserve_ticket():
     )
 
     travel["available_seats"] -= 1
+
+    for i, t in enumerate(travels):
+        if t["id"] == travel["id"]:
+            travels[i] = travel
+            break
 
     tickets.append(new_ticket.to_dict())
     save_data(TICKETS_FILE, tickets)
