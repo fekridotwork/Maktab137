@@ -516,6 +516,50 @@ def cancel_travel():
     print(f"Travel {travel_id} cancelled.")
     print(f"Cancelled tickets: {affected_tickets}")
 
+def complete_travel():
+
+    travels = load_data(TRAVELS_FILE)
+
+    if not travels:
+        print("No travels available.")
+        return
+
+    try:
+        travel_id = int(input("Enter travel ID to mark as completed: ").strip())
+    except ValueError:
+        print("Invalid travel ID.")
+        return
+
+    target_travel = None
+    for travel in travels:
+        if travel["id"] == travel_id:
+            target_travel = travel
+            break
+
+    if not target_travel:
+        print("Travel not found.")
+        return
+
+    if target_travel["status"] == "completed":
+        print("This travel is already marked as completed.")
+        return
+
+    if target_travel["status"] == "cancelled":
+        print("Cancelled travels cannot be marked completed.")
+        return
+
+    confirm = input(f"Are you sure you want to mark travel {travel_id} ({target_travel['origin']} → {target_travel['destination']}) as completed? (y/n): ").strip().lower()
+    if confirm != "y":
+        print("Operation aborted.")
+        return
+
+    target_travel["status"] = "completed"
+
+    save_data(TRAVELS_FILE, travels)
+
+    print(f"Travel {travel_id} marked as completed successfully!")
+
+
 def travel_members_report():
 
     tickets = load_data(TICKETS_FILE)
