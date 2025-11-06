@@ -122,6 +122,10 @@ def login():
 
     print("Too many failed attempts. Access denied.\n")
     return None
+def logout(user):
+    print(f"\n{user['first_name']} logged out successfully.")
+    return None
+
 
 def add_travel():
     # Only Admin can do this
@@ -647,12 +651,81 @@ def travel_members_report():
         member = member_list[seat_number]
         print(f"{seat_number:>4} | {member['first_name']:<17} | {member['last_name']:<17} | {member['status']}")
 
-if __name__ == "__main__":
-    print("1. Sign up")
-    print("2. Login")
-    choice = input("Choose: ")
+def admin_menu(user):
+    while True:
+        print("\n===== ADMIN MENU =====")
+        print("1. Add travel")
+        print("2. Edit travel")
+        print("3. Cancel travel")
+        print("4. Complete travel")
+        print("5. View travel members")
+        print("6. Logout")
+        print("=======================")
 
-    if choice == "1":
-        signup()
-    elif choice == "2":
-        login()
+        choice = input("Choose: ").strip()
+
+        if choice == "1":
+            add_travel()
+        elif choice == "2":
+            edit_travel()
+        elif choice == "3":
+            cancel_travel()
+        elif choice == "4":
+            complete_travel()
+        elif choice == "5":
+            travel_members_report()
+        elif choice == "6":
+            logout(user)
+            return
+        else:
+            print("Invalid choice.")
+
+def passenger_menu(user):
+    while True:
+        print("\n===== PASSENGER MENU =====")
+        print("1. Search travels")
+        print("2. Reserve ticket")
+        print("3. Make payment")
+        print("4. Logout")
+        print("===========================")
+
+        choice = input("Choose: ").strip()
+
+        if choice == "1":
+            search_travels()
+        elif choice == "2":
+            reserve_ticket()
+        elif choice == "3":
+            make_payment(user)
+        elif choice == "4":
+            logout(user)
+            return
+        else:
+            print("Invalid choice.")
+
+
+if __name__ == "__main__":
+    while True:
+        print("\n========== MAIN MENU ==========")
+        print("1. Sign up")
+        print("2. Login")
+        print("3. Exit")
+        print("================================")
+        choice = input("Choose: ").strip()
+
+        if choice == "1":
+            signup()
+        elif choice == "2":
+            user = login()
+            if user:
+                role = user["role"].lower()
+                if role == "admin":
+                    admin_menu(user)
+                else:
+                    passenger_menu(user)
+        elif choice == "3":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice.")
+
