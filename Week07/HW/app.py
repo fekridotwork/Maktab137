@@ -10,6 +10,21 @@ TRAVELS_FILE = "Week07/HW/data/travels.json"
 TICKETS_FILE = "Week07/HW/data/tickets.json"
 PAYMENTS_FILE = "Week07/HW/data/payments.json"
 
+def is_valid_datetime(s: str):
+    try:
+        datetime.strptime(s.strip(), "%Y-%m-%d %H:%M:%S")
+        return True
+    except ValueError:
+        return False
+
+def is_valid_date(s: str):
+    try:
+        datetime.strptime(s.strip(), "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
+
+
 
 def signup():
 
@@ -102,7 +117,11 @@ def add_travel():
 
     origin = input("Please enter the origin : ")
     destination = input("Please enter the destination : ")
-    departure_time = input("Please enter the departure time : ")
+    while True:
+        departure_time = input("Please enter the departure time (YYYY-MM-DD HH:MM:SS): ").strip()
+        if is_valid_datetime(departure_time):
+            break
+        print("Invalid datetime format.")
     duration = int(input("Please enter the duration of the trip : "))
     capacity = int(input("Please enter the seats capacity : "))
     price = float(input("Please enter the price : "))
@@ -131,6 +150,9 @@ def search_travels():
     origin = input("Enter origin (or leave empty): ").strip().lower()
     destination = input("Enter destination (or leave empty): ").strip().lower()
     date = input("Enter date (YYYY-MM-DD or leave empty): ").strip()
+    if date and not is_valid_date(date):
+        print("Invalid date format. Example: 2025-11-01")
+        return
 
     results = [
         travel for travel in travels
