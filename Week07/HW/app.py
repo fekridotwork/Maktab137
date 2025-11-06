@@ -431,6 +431,53 @@ def cancel_travel():
     print(f"Travel {travel_id} cancelled.")
     print(f"Cancelled tickets: {affected_tickets}")
 
+def travel_members_report():
+
+    tickets = load_data(TICKETS_FILE)
+    travels = load_data(TRAVELS_FILE)
+    users = load_data(USERS_FILE)
+
+    try:
+        travel_id = int(input("Please enter the travel_id you want to get record about : ").strip())
+    except ValueError:
+        print("Invalid ID.")
+        return
+
+    
+    target_travel = None
+    for travel in travels:
+        if travel_id == travel["id"]:
+            target_travel = travel
+            break
+
+    if not target_travel:
+        print("Travel not found.")
+        return
+    
+    print(f"\nReport for travel {target_travel['origin']} -> {target_travel['destination']} at {target_travel['departure_time']}")
+
+    member_list = {}
+
+    for ticket in tickets:
+        if ticket["travel_id"] == travel_id and ticket["status"] in ("reserved", "paid"):
+            for user in users:
+                if ticket["user_id"] == user["id"]:
+                    member_list[ticket["seat_number"]] = {
+                        "first_name": user["first_name"],
+                        "last_name": user["last_name"],
+                        "status": ticket["status"]
+                    }
+    if not member_list:
+        print("No passengers found for this travel.")
+        return
+    
+    print("\nSeat | First Name        | Last Name         | Status")
+    print("-" * 50)
+
+    for seat_number in sorted(member_list.keys()):
+        member = member_list[seat_number]
+        print(f"{seat_number:>4} | {member['first_name']:<17} | {member['last_name']:<17} | {member['status']}")
+
 if __name__ == "__main__":
     print("1. Sign up")
     print("2. Login")
