@@ -277,9 +277,17 @@ def make_payment(user):
     travels = load_data(TRAVELS_FILE)
     payments = load_data(PAYMENTS_FILE)
 
-    ticket_id = int(input("Enter your ticket ID to pay: ").strip())
-
-    ticket = next((ticket for ticket in tickets if ticket["id"] == ticket_id), None)
+    try:
+        ticket_id = int(input("Enter your ticket ID to pay: ").strip())
+    except ValueError:
+        print("Invalid ticket ID.")
+        return
+    
+    ticket = None
+    for t in tickets:
+        if t["id"] == ticket_id:
+            ticket = t
+            break
 
     if not ticket:
         print("Ticket not found.")
@@ -293,7 +301,11 @@ def make_payment(user):
         print("This ticket is already paid or cancelled.")
         return
 
-    travel = next((travel for travel in travels if travel["id"] == ticket["travel_id"]), None)
+    travel = None
+    for tr in travels:
+        if tr["id"] == ticket["travel_id"]:
+            travel = tr
+            break
 
     if not travel:
         print("Travel not found for this ticket.")
@@ -301,18 +313,32 @@ def make_payment(user):
     
     amount = travel["price"]
 
+    confirm = input(f"Pay {amount} for ticket {ticket_id}? (y/n): ").strip().lower()
+    if confirm != "y":
+        print("Payment cancelled by user.")
+        return
+
+    success_input = input("Was the payment successful? (y/n): ").strip().lower()
+    payment_status = "success" if success_input == "y" else "failed"
+
+
     new_payment = Payment(
         id = len(payments) + 1,
         user_id = user["id"],
         ticket_id = ticket["id"],
         amount = amount,
-        status = "success",
+        status = payment_status,
         paid_at = str(datetime.now())
     )
 
-    ticket["status"] = "paid"
-
     payments.append(new_payment.to_dict())
+
+    if payment_status == "success":
+        ticket["status"] = "paid"
+        print("\nPayment successful!")
+    else:
+        print("\nPayment failed. Ticket remains reserved.")
+
     save_data(PAYMENTS_FILE, payments)
     save_data(TICKETS_FILE, tickets)
 
@@ -320,6 +346,7 @@ def make_payment(user):
     print(f"Ticket ID: {ticket['id']}")
     print(f"Amount Paid: {amount:.2f}")
     print(f"Time: {new_payment.paid_at}")
+    print(f"Status: {payment_status}")
 
 def edit_travel():
     # For admin only
