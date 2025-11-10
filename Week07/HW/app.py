@@ -36,25 +36,29 @@ def is_valid_date(s: str):
         return False
     
 
-
-
-
 def signup():
 
     users = load_data(USERS_FILE)
 
     while True:
         username = input("Enter username: ").strip()
-        duplicate = False
-        for u in users:
-            if u["username"] == username:
-                print("Oops! This username already exists. Please choose another one.")
-                duplicate = True
-                break
-        if not duplicate:
-            break
 
-    password = input("Enter your password: ").strip()
+        if not username:
+            print("Username cannot be empty.")
+            continue
+
+        if any(u["username"] == username for u in users):
+            print("Oops! This username already exists. Please choose another one.")
+            continue
+
+        password = input("Enter your password: ").strip()
+        if not password:
+            print("Password cannot be empty.")
+            continue
+
+        break  
+
+
     first_name = input("Enter first name: ").strip()
     last_name = input("Enter last name: ").strip()
     phone = input("Enter phone number: ").strip()
@@ -63,7 +67,7 @@ def signup():
         birth_date = input("Enter birth date (YYYY-MM-DD): ").strip()
         if is_valid_date(birth_date):
             break
-        print("Invalid date format. Example: 2003-02-19")
+        print("Invalid date format.")
 
     role = input("Enter role (admin / passenger): ").strip().lower()
     if role not in ("admin", "passenger"):
@@ -131,8 +135,9 @@ def login():
 
     print("Too many failed attempts. Access denied.\n")
     return None
+
 def logout(user):
-    print(f"\n{user['first_name']} logged out successfully.")
+    print(f"\n{user['first_name']}{user['last_name']} logged out successfully.")
     return None
 
 
@@ -141,19 +146,57 @@ def add_travel():
     try:
         travels = load_data(TRAVELS_FILE)
 
-        origin = input("Please enter the origin : ")
-        destination = input("Please enter the destination : ")
+        while True:
+            origin = input("Please enter the origin : ").strip()
+            if origin:
+                break
+            print("Origin cannot be empty.")
+
+        while True:
+            destination = input("Please enter the destination : ").strip()
+            if destination:
+                break
+            print("Destination cannot be empty.")
+
         while True:
             departure_time = input("Please enter the departure time (YYYY-MM-DD HH:MM:SS): ").strip()
             if is_valid_datetime(departure_time):
                 break
             raise InvalidDateError("Invalid datetime format. Use YYYY-MM-DD HH:MM:SS.")
-        try:
-            duration = int(input("Please enter the duration of the trip (minutes): ").strip())
-            capacity = int(input("Please enter the seats capacity : ").strip())
-            price = float(input("Please enter the price : ").strip())
-        except ValueError:
-            raise AppError("Numeric fields must be valid numbers.")
+        
+        while True:
+            raw = input("Please enter the duration of the trip (minutes): ").strip()
+            try:
+                duration = int(raw)
+                if duration <= 0:
+                    print("Duration must be a positive integer.")
+                    continue
+                break
+            except ValueError:
+                print("Invalid number. Please enter an integer.")
+
+        while True:
+            raw = input("Please enter the seats capacity : ").strip()
+            try:
+                capacity = int(raw)
+                if capacity <= 0:
+                    print("Capacity must be a positive integer.")
+                    continue
+                break
+            except ValueError:
+                print("Invalid number. Please enter an integer.")
+
+        while True:
+            raw = input("Please enter the price : ").strip()
+            try:
+                price = float(raw)
+                if price < 0:
+                    print("Price cannot be negative.")
+                    continue
+                break
+            except ValueError:
+                print("Invalid number. Please enter a valid price.")
+
 
         new_travel = Travel(
             id = len(travels) + 1,
@@ -170,7 +213,7 @@ def add_travel():
         travels.append(new_travel.to_dict())
         save_data(TRAVELS_FILE, travels)
 
-        print(f"Travel from {origin} to {destination} added successfully!\n")
+        print(f"Travel from {origin} to {destination} added successfully with the id!\n")
     except Exception as e:
         handle_error(e)    
 
@@ -178,9 +221,14 @@ def search_travels():
     try:
         travels = load_data(TRAVELS_FILE)
 
+        if not travels:
+            print("No travel exist.")
+            return
+
         origin = input("Enter origin (or leave empty): ").strip().lower()
         destination = input("Enter destination (or leave empty): ").strip().lower()
         date = input("Enter date (YYYY-MM-DD or leave empty): ").strip()
+        
         if date and not is_valid_date(date):
             raise InvalidDateError("Invalid date format. Use YYYY-MM-DD.")
 
@@ -216,7 +264,7 @@ def search_travels():
         print("\nSearch Results:")
         for travel in results:
             print(
-                f"ID {travel['id']:>2} | {travel['origin']:<10} → {travel['destination']:<10} | "
+                f"ID {travel['id']:>2} | {travel['origin']:<10} -> {travel['destination']:<10} | "
                 f"{travel['departure_time']:<19} | {travel['available_seats']:>2} | {travel['price']:>8.2f}"
             )
     except Exception as e:
@@ -224,9 +272,6 @@ def search_travels():
 
 def reserve_ticket():
     try:
-        user = login()
-        if not user:
-            raise PermissionDeniedError("Login required.")
         
         travels = load_data(TRAVELS_FILE)
         if not travels:
@@ -234,7 +279,7 @@ def reserve_ticket():
 
         print("\nAvailable travels:")
         for t in travels:
-            print(f"ID {t['id']} | {t['origin']} -> {t['destination']} | {t['departure_time']} | seats: {t['available_seats']}/{t['capacity']} | price: {t['price']}")
+            print(f"ID : {t['id']} | {t['origin']} -> {t['destination']} | {t['departure_time']} | seats: {t['available_seats']}/{t['capacity']} | price: {t['price']}")
 
         try:
             travel_id = int(input("Please enter the travel ID : ").strip())
@@ -318,8 +363,43 @@ def make_payment(user):
         travels = load_data(TRAVELS_FILE)
         payments = load_data(PAYMENTS_FILE)
 
+        if not tickets:
+            print("No tickets found. You must reserve a ticket before making a payment.")
+            return
+
+        if not travels:
+            print("No travel data found.")
+            return
+        
+        user_tickets = []
+        for t in tickets:
+            if t["user_id"] == user["id"]:
+                user_tickets.append(t)
+
+        if not user_tickets:
+            print("You have no tickets to pay for.")
+            return
+
+        print("\nYour tickets:")
+        for t in user_tickets:
+            related_travel = None
+            for tr in travels:
+                if tr["id"] == t["travel_id"]:
+                    related_travel = tr
+                    break
+
+            if related_travel :
+                print(
+                    f"ID {t['id']:>3} | {related_travel['origin']} -> {related_travel['destination']} | "
+                    f"{related_travel['departure_time']} | seat {t['seat_number']} | status: {t['status']}"
+                )
+            else:
+                print(
+                    f"ID : {t['id']:>3} | <unknown travel> | seat {t['seat_number']} | status: {t['status']}"
+                )
+
         try:
-            ticket_id = int(input("Enter your ticket ID to pay: ").strip())
+            ticket_id = int(input("\nEnter your ticket ID to pay: ").strip())
         except ValueError:
             raise InvalidIdError("Invalid ticket ID.")
         
@@ -361,7 +441,6 @@ def make_payment(user):
 
         success_input = input("Was the payment successful? (y/n): ").strip().lower()
         payment_status = "success" if success_input == "y" else "failed"
-
 
         new_payment = Payment(
             id = len(payments) + 1,
