@@ -1,14 +1,27 @@
+from authentication import EmailLogin
+
+LOGIN_METHODS = {
+    "1": EmailLogin,
+    # "2": OTPLogin,
+    # "3": GoogleLogin,
+    }
+
 while True:
-    choice = input("How do you want to Login ?\n1.Email-Password\n2.OTP\n3.Google Login\nYour choice : ")
-    if choice == "1":
-        # Email- Password Login
+    print("How do you want to Login ?")
+    print("1. Email-Password")
+    print("2. OTP")
+    print("3. Google Login")
+    print("Q. Quit")
+
+    choice = input("Your choice: ").strip().lower()
+
+    if choice == "q":
+        print("Bye!")
         break
-    elif choice == "2":
-        # OTP Login
-        break
-    elif choice == "3":
-        # Google Login
+
+    if choice in LOGIN_METHODS:
+        auth = LOGIN_METHODS[choice]()  
+        auth.login()                    
         break
     else:
         print("Invalid Choice! --> Try Again.")
-        continue
