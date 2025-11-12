@@ -1,9 +1,12 @@
-from authentication import EmailLogin
+from authentication.EmailLogin import EmailLogin
+from authentication.OTPLogin import OTPLogin
+from authentication.GoogleLogin import GoogleLogin
+
 
 LOGIN_METHODS = {
     "1": EmailLogin,
-    # "2": OTPLogin,
-    # "3": GoogleLogin,
+    "2": OTPLogin,
+    "3": GoogleLogin
     }
 
 while True:
