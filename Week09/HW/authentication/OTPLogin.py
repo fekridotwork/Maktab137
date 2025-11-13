@@ -1,7 +1,7 @@
 import random
 import time
-import BaseLogin
-from utils.file_manager import load_data, save_data
+from .BaseLogin import BaseLogin  
+from utils.file_manager import load_data
 
 class OTPLogin(BaseLogin):
 
@@ -9,47 +9,69 @@ class OTPLogin(BaseLogin):
 
     # Overriding Parent class method
     def login(self):
-        users = load_data("data/users.json")
-
-        email = input("Please enter your email : ").strip().lower()
-        for user in users:
-            if user["email"] == email:
-                otp_code = random.randint(100000, 999999)
-                expires_at = time.time() + 120 # 2minutes
-                OTPLogin.otp_status[email] = {
-                    "otp_code" : otp_code,
-                    "expires_at" : expires_at,
-                    "attempts" : 0
-                }
-                print(f"OTP sent to {email}: {otp_code}")
-                break
-        else:
-            print("Email not found in the system! --> Try Again.")
-
-        while True:
-            entered_code = input("Please enter the 6-digit code you've received : ")
-
-            record = OTPLogin.otp_status.get(email)
-            if not record:
-                print("No Active OTP found! --> Request a new code.")
-                break
-            
-            # Checking expiry
-            if time.time() > record["expires_at"]:
-                print("OTP-code expired! --> Please request a new code.")
-                del OTPLogin.otp_status[email]
-                break
-
-            # Checking code
-            if entered_code == str(record["otp_code"]):
-                print("OTP verified successfully and Login completed!")
-                del OTPLogin.otp_status[email]
-                break
+        users = load_data("Week09/HW/data/users.json")
+        for attempt in range(1, 4):
+            number = input(f"\nPlease enter your number ({attempt} / 3 attempt) : ")
+            for user in users:
+                if user["number"] == number:
+                    otp_code = random.randint(100000, 999999)
+                    expires_at = time.time() + 10 
+                    OTPLogin.otp_status[number] = {
+                        "otp_code" : otp_code,
+                        "expires_at" : expires_at,
+                        "attempts" : 0
+                    }
+                    print(f"\nOTP sent to {user['number']}: {otp_code}")
+                    break
             else:
-                record["attempts"] += 1
-                if record["attempts"] >= 3:
-                    print("Too many wrong attempts! --> Please request a new code. ")
-                    del OTPLogin.otp_status[email]
+                print(
+                    "\nNumber not found in the system! --> Try Again."
+                    if attempt < 3
+                    else "\nNumber not found in the system! --> No more attempt left to try."
+                    )
+                continue
+            
+            is_founded = False
+            while True:
+                entered_code = input("\nPlease enter the 6-digit code you've received : ")
+
+                record = OTPLogin.otp_status.get(number)
+                if not record:
+                    print(
+                        "\nNo Active OTP found! --> Request a new code."
+                        if attempt < 3
+                        else "\nNo Active OTP found! --> No more attempt left to try."
+                        )
+                    break
+                
+                # Checking expiry
+                if time.time() > record["expires_at"]:
+                    print(
+                        "\nOTP-code expired! --> Please request a new code."
+                        if attempt < 3
+                        else "\nOTP-code expired! --> No more attempt left to try."
+                        )
+                    del OTPLogin.otp_status[number]
+                    break
+
+                # Checking code
+                if entered_code == str(record["otp_code"]):
+                    print("\nOTP verified successfully and Login completed!")
+                    del OTPLogin.otp_status[number]
+                    is_founded = True
                     break
                 else:
-                    print(f"Incorrect code! Attempts left: {3 - record['attempts']}")
+                    record["attempts"] += 1
+                    if record["attempts"] >= 3:
+                        print(
+                            "\nToo many wrong attempts! --> Please request a new code."
+                            if attempt < 3
+                            else "\nToo many wrong attempts! --> No more attempt left to try."
+                            )
+                        del OTPLogin.otp_status[number]
+                        break
+                    else:
+                        print(f"\nIncorrect code! Attempts left: {3 - record['attempts']}")
+                        continue
+            if is_founded:
+                break

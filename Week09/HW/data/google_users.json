@@ -1,14 +1,14 @@
 [
-  {
-    "username": "matin",
-    "email": "matin@gmail.com",
-    "password": "1234",
-    "is_login": false
-  },
-  {
-    "username": "sara",
-    "email": "sara@example.com",
-    "password": "abcd",
-    "is_login": false
-  }
+    {
+        "username": "Matin",
+        "email": "matin@gmail.com",
+        "password": "1234",
+        "is_login": true
+    },
+    {
+        "username": "Sara",
+        "email": "sara@example.com",
+        "password": "abcd",
+        "is_login": false
+    }
 ]
