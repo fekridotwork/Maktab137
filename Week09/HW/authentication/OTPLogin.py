@@ -2,12 +2,17 @@ import random
 import time
 from .BaseLogin import BaseLogin  
 from utils.file_manager import load_data
+from .decorators import rate_limit, captcha
+
+
 
 class OTPLogin(BaseLogin):
 
     otp_status = {}
 
     # Overriding Parent class method
+    @captcha(required_after = 2)      
+    @rate_limit(block_seconds = 60)
     def login(self):
         users = load_data("Week09/HW/data/users.json")
         for attempt in range(1, 4):
@@ -59,7 +64,7 @@ class OTPLogin(BaseLogin):
                     print("\nOTP verified successfully and Login completed!")
                     del OTPLogin.otp_status[number]
                     is_founded = True
-                    break
+                    return self.authentication_result(True, user["user_id"])
                 else:
                     record["attempts"] += 1
                     if record["attempts"] >= 3:
@@ -75,3 +80,5 @@ class OTPLogin(BaseLogin):
                         continue
             if is_founded:
                 break
+        else:
+            return self.authentication_result(False)

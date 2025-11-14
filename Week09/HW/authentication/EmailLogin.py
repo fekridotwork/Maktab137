@@ -1,7 +1,13 @@
 from .BaseLogin import BaseLogin       
 from utils.file_manager import load_data, save_data
+from .decorators import rate_limit, mfa, captcha
+
 class EmailLogin(BaseLogin):
+
     # Overriding Parent login method
+    @mfa()                          
+    @captcha(required_after = 2)      
+    @rate_limit(block_seconds = 45)
     def login(self):
         
         users = load_data("Week09/HW/data/users.json")
@@ -34,8 +40,10 @@ class EmailLogin(BaseLogin):
                 continue
             if is_valid:
                 print("\nYou've entered successfully!")
-                break
+                return self.authentication_result(True, user["user_id"])
             else:
                 continue
+        else:
+            return self.authentication_result(False)
         
 

@@ -1,8 +1,14 @@
 from .BaseLogin import BaseLogin  
 from utils.file_manager import load_data, save_data
+from .decorators import rate_limit, captcha
+
+
 
 class GoogleLogin(BaseLogin):
+
     # Overriding Parent login method
+    @captcha(required_after = 2)
+    @rate_limit(block_seconds = 60)
     def login(self):
 
         google_users = load_data("Week09/HW/data/google_users.json")
@@ -18,7 +24,7 @@ class GoogleLogin(BaseLogin):
                     choice = input("Your choice (y/n) : ").lower()
                     if choice == "y":
                         print("\nSo you are already logged in!")
-                        return
+                        return self.authentication_result(True, user["username"])
                     
                     elif choice == "n":
                         user["is_login"] = False
@@ -43,14 +49,15 @@ class GoogleLogin(BaseLogin):
                         user["is_login"] = True
                         save_data("Week09/HW/data/google_users.json", google_users)
                         print("\nYou've entered your google account successfully!")
-                        return
+                        return self.authentication_result(True, user["username"])
                     
                     else:
                         print("\nWrong Password! --> Try Again.")
                         print(f"Remaining attempts : {3 - attempt}")
 
                 print("\nNo more attempt is allowed! --> Try another way.")
-                return
+                return self.authentication_result(False)
             
         print("\nYour email wasn't found in the system! --> Try another way.")
+        return self.authentication_result(False)
             
