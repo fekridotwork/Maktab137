@@ -5,7 +5,7 @@ def load_data(file_path):
         with open(file_path, mode='r', encoding='utf-8') as file:
             data = json.load(file)
             return data
-    except (FileNotFoundError, json.JSONDecodeError): # It's better to separate
+    except (FileNotFoundError, json.JSONDecodeError):
         return []
 
 def save_data(file_path, data):
